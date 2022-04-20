@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="PurchaseMapper">
+
+	<resultMap id="purchaseSelectMap" type="purchase">
+  		<result property="tranNo" column="tran_no" jdbcType="NUMERIC"/>
+  
+  		<result property="purchaseProd.prodNo" column="prod_no" jdbcType="NUMERIC"/>
+  		<result property="buyer.userId" column="buyer_id" jdbcType="VARCHAR"/>
+  		
+  		<result property="paymentOption" column="payment_option" jdbcType="CHAR"/>
+  		<result property="receiverName" column="receiver_name" jdbcType="VARCHAR"/>
+  		<result property="receiverPhone" column="receiver_phone" jdbcType="VARCHAR"/>
+  		<result property="divyAddr" column="demailaddr" jdbcType="VARCHAR"/>
+  		<result property="divyRequest" column="dlvy_request" jdbcType="VARCHAR"/>
+  		<result property="tranCode" column="tran_status_code" jdbcType="CHAR"/>
+  		<result property="orderDate" column="order_data" jdbcType="DATE"/>
+  		<result property="divyDate" column="dlvy_date" jdbcType="DATE"/>
+  		<result property="quantity" column="quantity" jdbcType="NUMERIC"/>
+  	</resultMap>
+  	
+  	<!-- ADD PURCHASE -->
+  	<insert id="addPurchase" 
+  			parameterType="com.model2.mvc.service.domain.Purchase">
+  		INSERT
+  		INTO transaction(tran_no, prod_no, buyer_id, payment_option, receiver_name, receiver_phone, demailaddr,
+  		dlvy_request,  tran_status_code, order_data, dlvy_date, quantity)
+  		VALUES (
+  					seq_transaction_tran_no.NEXTVAL, 
+  					#{purchaseProd.prodNo}, 
+  					#{buyer.userId}, 
+  					#{paymentOption:CHAR}, 
+  					#{receiverName:VARCHAR}, 
+  					#{receiverPhone:VARCHAR}, 
+  					#{divyAddr:VARCHAR}, 
+  					#{divyRequest:VARCHAR}, 
+  					'1', 
+  					SYSDATE, 
+  					to_date(#{divyDate:DATE}, 'yy-mm-dd'), 
+  					#{quantity} 
+  				)
+  	</insert>
+  	
+  	<!-- GET PURCHASE -->
+  	<select id="getPurchase"
+  			parameterType="int"
+  			resultMap="purchaseSelectMap">
+  		SELECT *
+  		FROM transaction
+  		WHERE tran_no = #{tranNo}
+  	</select>
+  	
+  	<!-- UPDATE PURCHASE -->
+  	<update id="updatePurchase"
+  			parameterType="com.model2.mvc.service.domain.Purchase">
+  		UPDATE transaction
+  		<set>
+  			payment_option = #{paymentOption:VARCHAR},
+  			receiver_name = #{receiverName:VARCHAR},
+  			receiver_phone = #{receiverPhone:VARCHAR},
+  			demailaddr = #{divyAddr:VARCHAR},
+  			dlvy_request = #{divyRequest:VARCHAR},
+  			dlvy_date = to_date(#{divyDate:DATE}, 'yyyy-mm-dd'),
+  			quantity = #{quantity}
+  		</set>
+  		WHERE tran_no = #{tranNo}
+  	</update>
+  	
+  	<!-- GET PURCHASELIST -->
+  	<sql id="getPurchaseList-base">
+  		SELECT 
+  		* 
+  		FROM transaction 
+  		WHERE buyer_id = #{buyerId}
+  		ORDER BY tran_no
+  	</sql>
+  	
+  	<sql id="getSaleList-base">
+  		SELECT 
+  		tran_no, buyer_id, p.prod_no, prod_name, receiver_name, payment_option, receiver_phone, tran_status_code, t.quantity 
+  		FROM transaction t, product p
+  		WHERE p.prod_no = t.prod_no 
+  		ORDER BY tran_no
+  	</sql>
+ 
+  	<!-- PURCHASELIST TOTALCOUNT -->
+  	<select id="PurchaseListGetTotalCount" parameterType="map" resultType="int">
+  		SELECT COUNT(*)
+  		FROM ( 
+  				<include refid="getPurchaseList-base" />
+  				 ) countTable
+  	</select>
+  	
+  	<!-- SALELIST TOTALCOUNT -->
+  	<select id="SaleListGetTotalCount" parameterType="com.model2.mvc.common.Search" resultType="int">
+  		SELECT COUNT(*)
+  		FROM ( 
+  				<include refid="getSaleList-base" />
+  				 ) countTable
+  	</select>
+  	
+  	<!-- PURCHASELIST makeCurrentPageSql -->
+  	<select id="PurchaseListMakeCurrentPageSql"
+  			parameterType="map"
+  			resultMap="purchaseSelectMap">
+  		SELECT *
+  		FROM (	SELECT inner_table.*, ROWNUM AS row_seq
+  				FROM (
+  						<include refid="getPurchaseList-base" />
+		  					 ) inner_table
+		  		WHERE ROWNUM <![CDATA[<=]]> #{search.endRowNum} )
+		WHERE row_seq BETWEEN #{search.startRowNum} AND #{search.endRowNum}
+  	</select>
+  	
+  	<!-- SALELIST makeCurrentPageSql -->
+  	<select id="SaleListMakeCurrentPageSql"
+  			parameterType="com.model2.mvc.common.Search"
+  			resultMap="purchaseSelectMap">
+  		SELECT *
+  		FROM (	SELECT inner_table.*, ROWNUM AS row_seq
+  				FROM (
+  						<include refid="getSaleList-base" />
+		  					 ) inner_table
+		  		WHERE ROWNUM <![CDATA[<=]]> #{endRowNum} )
+		WHERE row_seq BETWEEN #{startRowNum} AND #{endRowNum}
+  	</select>
+  	
+  	<!-- UPDATE TRANCODE -->
+  	<update id="updateTranCode"
+  			parameterType="purchase">
+  		UPDATE transaction
+  		<set>
+  			tran_status_code = #{tranCode}
+  		</set>
+  		WHERE prod_no = #{purchaseProd.prodNo}
+  	</update>
+  	
+  	<!-- DELETE PURCHASE -->
+  	<delete id="deletePurchase"
+  			parameterType="int">
+  		DELETE FROM transaction
+  		WHERE tran_no = #{tranNo}
+  	</delete>
+  	
+</mapper>

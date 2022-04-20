@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee;
+                      http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+  version="4.0"
+  metadata-complete="true">
+  
+  	<!--	:: ContextLoaderListener 을 이용한 Business logic  Meta-Data 등록  
+			ㅇ 빈설정(Meta-Data) 파일은 DispatcherServlet 의 init-param 의 
+				 contextConfigLocation 으로 등록하는 방법과...
+			ㅇ ContextLoaderListener	 로 등록하는 방법이 있다.	  -->
+  	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener	</listener-class>
+	</listener>		
+	 
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>
+			classpath:config/context-aspect.xml,
+			classpath:config/context-common.xml,
+			classpath:config/context-mybatis.xml,
+			classpath:config/context-transaction.xml
+		</param-value>
+	</context-param>
+	
+	<!--  
+	 게시물 Page 하단 번호 개수  
+	<context-param>
+		<param-name>pageUnit</param-name>
+		<param-value>5</param-value>
+	</context-param>
+	
+	 게시판 Page에 보여주는 게시물 수 
+	<context-param>
+		<param-name>pageSize</param-name>
+		<param-value>3</param-value>
+	</context-param>
+
+	 Filter를 이용 한글처리 
+	<filter>
+		<filter-name>requestFilter</filter-name>
+		<filter-class>com.model2.mvc.common.filter.RequestFilter</filter-class>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>requestFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	-->
+	
+	<!-- :: Spring API 에 제공하는 CharacterEncodingFilter 로 한글 인코딩처리 -->	
+	<filter>
+		<filter-name>encodingFilter</filter-name>
+		<filter-class>	org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>euc_kr</param-value>
+		</init-param>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>encodingFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- 단일인입점 설정 
+	<servlet>
+		<servlet-name>action</servlet-name>
+		<servlet-class>com.model2.mvc.framework.ActionServlet</servlet-class>
+		<init-param>
+			<param-name>resources</param-name>
+			<param-value>com/model2/mvc/resources/actionmapping.properties</param-value>
+		</init-param>
+		<load-onstartup>1</load-onstartup>
+	</servlet>
+	
+	-->
+	
+	<!-- ::SpringMVC 에서의 Front Controller(단일인입점)  DispatcherServlet 선언 -->
+	  <servlet>
+		    <servlet-name>action</servlet-name>
+		    <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		    
+		    <init-param>
+		      <param-name>contextConfigLocation</param-name>
+		      <param-value>/config/springMVC/common-servlet.xml</param-value>
+		      <!-- Servlet Meta-data / Spring Meta-data 위치 분리함 -->
+		    </init-param>
+		    <load-on-startup>1</load-on-startup>
+		    <!-- image upload -->
+		    <multipart-config>
+		    	<location>/images/uploadFiles</location><!-- 업로드 파일 저장되는 경로 -->
+		    	<max-file-size>20971520</max-file-size><!-- 한파일 : 1mb * 20 -->
+		    	<max-request-size>41943040</max-request-size><!-- 한번에 여러개올리는데 전체가 40mb -->
+		    	<file-size-threshold>20971520</file-size-threshold><!-- 넘으면 temp에 넣고 업로드에 들어가지 않는다 : 20mb -->
+		    </multipart-config>
+  </servlet>
+	
+	<servlet-mapping>
+		<servlet-name>action</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+		
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file> 
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+    </welcome-file-list>
+	
+</web-app>

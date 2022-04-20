@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		
+<mapper namespace="UserMapper">
+
+	<resultMap type="user" id="userSelectMap">
+  		<result property="userId" column="user_id" jdbcType="VARCHAR"/>
+  		<result property="userName" column="user_name" jdbcType="VARCHAR"/>
+  		<result property="password" column="password" jdbcType="VARCHAR"/>
+  		<result property="role" column="role" jdbcType="VARCHAR"/>
+  		<result property="ssn" column="ssn" jdbcType="VARCHAR"/>
+  		<result property="phone" column="cell_phone" jdbcType="VARCHAR"/>
+  		<result property="addr" column="addr" jdbcType="VARCHAR"/>
+  		<result property="email" column="email" jdbcType="VARCHAR"/>
+  		<result property="regDate" column="reg_date" jdbcType="DATE"/>
+  	</resultMap>
+  	
+  	<!-- ADDUSER -->
+  	<insert id="addUser" 
+  			parameterType="com.model2.mvc.service.domain.User">
+  		INSERT
+  		INTO users 
+  		VALUES (#{userId}, #{userName}, #{password}, 'user', #{ssn:VARCHAR},
+  				#{phone:VARCHAR}, #{addr:VARCHAR}, #{email:VARCHAR}, SYSDATE)
+  	</insert>
+  	
+  	
+  	
+  	<!-- GETUSER -->
+  	<select id="getUser"
+  			parameterType="com.model2.mvc.service.domain.User"
+  			resultMap="userSelectMap">
+  		SELECT
+  		user_id, user_name, password, role, cell_phone, addr, email, reg_date
+  		FROM users
+  		WHERE user_id = #{value}
+  	</select>
+  	
+  	
+  	<!-- UPDATEUSER -->
+  	<update id="updateUser"
+  			parameterType="com.model2.mvc.service.domain.User">
+  		UPDATE users
+  		<set>
+  			<if test="userName != null">user_name = #{userName},</if>
+  										cell_phone = #{phone:VARCHAR},
+  										addr = #{addr:VARCHAR},
+  										email = #{email:VARCHAR}
+  		</set>		
+  		WHERE user_id = #{userId}
+  	</update>
+  	
+  	
+  	<!-- DELECTUSER -->
+  	<delete id="removeUser" parameterType="string">
+  		DELETE
+  		FROM users
+  		WHERE user_id = #{value}
+  	</delete>
+  	
+  	
+  	
+  	<!-- GETUSERLIST -->
+  	<sql id="getUserList-base">
+	  		SELECT user_id, user_name, email
+	  		FROM users
+	  		<where>
+	  			<if test="searchCondition!=null">
+		  			<choose>
+		  				<when test="searchCondition==0 and !searchKeyword.equals('')">
+		  					user_id LIKE '%'||#{searchKeyword}||'%'
+		  				</when>
+		  				<when test="searchCondition==1 and !searchKeyword.equals('')">
+		  					user_name LIKE '%'||#{searchKeyword}||'%'
+		  				</when>
+		  			</choose>
+	  			</if>
+	  		</where>
+	  		ORDER BY user_id
+  	</sql>
+  	
+  	<!-- TOTALCOUNT -->
+  	<select id="getTotalCount" parameterType="com.model2.mvc.common.Search" resultType="int">
+  		SELECT COUNT(*)
+  		FROM ( 
+  				<include refid="getUserList-base" />
+  				 ) countTable
+  	</select>
+  	
+  	<!-- makeCurrentPageSql -->
+  	<select id="makeCurrentPageSql"
+  			parameterType="com.model2.mvc.common.Search"
+  			resultMap="userSelectMap">
+  		SELECT *
+  		FROM (	SELECT inner_table.*, ROWNUM AS row_seq
+  				FROM (
+  						<include refid="getUserList-base" />
+		  					 ) inner_table
+		  		WHERE ROWNUM <![CDATA[<=]]> #{currentPage} * ${pageSize} )
+		WHERE row_seq BETWEEN ((#{currentPage}-1)*#{pageSize} + 1) AND (#{currentPage} * #{pageSize})
+  	</select>
+  	
+</mapper>
