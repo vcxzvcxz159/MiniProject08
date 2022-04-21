@@ -1,5 +1,6 @@
 package com.model2.mvc.web.user;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import com.model2.mvc.common.Page;
 import com.model2.mvc.common.Search;
@@ -38,15 +41,14 @@ public class UserRestController {
 		System.out.println(this.getClass());
 	}
 	
-	@RequestMapping( value="json/getUser/{userId}", method=RequestMethod.GET )
-	public User getUser( @PathVariable String userId ) throws Exception{
-		
-		System.out.println("/user/json/getUser : GET");
-		
-		//Business Logic
-		return userService.getUser(userId);
-	}
-
+	@Value("#{commonProperties['pageUnit']}")
+	//@Value("#{commonProperties['pageUnit'] ?: 3}")
+	int pageUnit;
+	
+	@Value("#{commonProperties['pageSize']}")
+	//@Value("#{commonProperties['pageSize'] ?: 2}")
+	int pageSize;
+	
 	@RequestMapping( value="json/login", method=RequestMethod.POST )
 	public User login(	@RequestBody User user,
 									HttpSession session ) throws Exception{
@@ -56,11 +58,32 @@ public class UserRestController {
 		System.out.println("::"+user);
 		User dbUser=userService.getUser(user.getUserId());
 		
+		System.out.println(user.getPassword().equals(dbUser.getPassword()));
+		
 		if( user.getPassword().equals(dbUser.getPassword())){
 			session.setAttribute("user", dbUser);
 		}
 		
 		return dbUser;
+	}
+	
+	@RequestMapping( value="json/logout", method=RequestMethod.GET )
+	public void logout(HttpSession session ) throws Exception{
+	
+		System.out.println("/user/json/logout : GET");
+		//Business Logic
+		session.invalidate();
+		System.out.println("after invalidate");
+
+	}
+	
+	@RequestMapping( value="json/getUser/{userId}", method=RequestMethod.GET )
+	public User getUser( @PathVariable String userId ) throws Exception{
+		
+		System.out.println("/user/json/getUser : GET");
+		
+		//Business Logic
+		return userService.getUser(userId);
 	}
 	
 	@RequestMapping(value="json/addUser", method=RequestMethod.POST)
@@ -93,4 +116,45 @@ public class UserRestController {
 		
 		return user;
 	}
+	
+	@RequestMapping(value="json/checkDuplication", method=RequestMethod.POST)
+	public Map<String, Object> checkDuplication(@RequestBody User user) throws Exception{
+		
+		System.out.println("/user/json/checkDuplication : POST");
+		
+		System.out.println("::" + user);
+		
+		boolean result = userService.checkDuplication(user.getUserId());
+		
+		Map map = new HashMap();
+		
+		map.put("result", new Boolean(result));
+		map.put("userId", user.getUserId());
+		
+		return map;
+	}
+	
+	@RequestMapping(value="json/listUser", method=RequestMethod.POST)
+	public Map<String, Object> listUser(@RequestBody Search search) throws Exception{
+		
+		System.out.println("/user/json/listUser");
+		
+		if(search.getCurrentPage()==0) {
+			search.setCurrentPage(1);
+		}
+		search.setPageSize(pageSize);
+		
+		// Business logic ผ๖วเ
+		Map<String, Object> map = userService.getUserList(search);
+		
+		Page resultPage = new Page(search.getCurrentPage(), ((Integer)map.get("totalCount")).intValue(), pageUnit, pageSize);
+		
+		map.put("resultPage", resultPage);
+		map.put("search", search);
+		
+		map.remove("totalCount");
+		
+		return map;
+	}
+	
 }
