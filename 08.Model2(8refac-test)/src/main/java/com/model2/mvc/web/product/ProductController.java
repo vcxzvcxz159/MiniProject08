@@ -53,8 +53,6 @@ public class ProductController {
 	int pageSize;
 	
 	// image upload
-	private static final Logger logger = LoggerFactory.getLogger(ProductController.class);	
-	
 	@Resource(name="uploadPath")
 	String uploadPath;
 	
@@ -142,7 +140,7 @@ public class ProductController {
 	}
 	
 	@RequestMapping(value="/updateProduct", method=RequestMethod.POST)
-	public String updateProduct( @ModelAttribute("product") Product product , Model model , HttpSession session) throws Exception{
+	public String updateProduct( @ModelAttribute("product") Product product) throws Exception{
 
 		System.out.println("/updateProduct method = POST");
 		//Business Logic

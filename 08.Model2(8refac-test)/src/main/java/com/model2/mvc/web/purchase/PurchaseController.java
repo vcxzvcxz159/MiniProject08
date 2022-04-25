@@ -245,10 +245,11 @@ public class PurchaseController {
 		System.out.println("/deletePurchase method = GET");
 		
 		// B/L
-		purchaseService.deletePurchase(tranNo);
+		int rowResult = purchaseService.deletePurchase(tranNo);
+		
+		System.out.println("rowResult : " + rowResult);
 		
 		ModelAndView modelAndView = new ModelAndView();
-		
 		
 		modelAndView.setViewName("forward:/purchase/listPurchase");
 		
